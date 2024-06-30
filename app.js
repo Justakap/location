@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const DriverModel = require('./models/driver');
 
 const bodyParser = require('body-parser');
-const groupModel = require("./models/group");
+const roomModel = require("./models/room");
 const UserModel = require("./models/user");
 
 const app = express();
@@ -16,18 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 const server = createServer(app);
-// const io = new Server(server, {
-//     cors: {
-//         origin: "*",
-//         methods: ["GET", "POST"],
-//         credentials: true
-//     }
-// });
 
-// app.use(cors({
-//     origin: "*",
-//     credentials: true,
-// }));
 const io = new Server(server, {
     cors: {
         origin: ["http://localhost:3000", "https://marklogistics.netlify.app"],
@@ -41,6 +30,7 @@ app.use(cors({
     origin: ["http://localhost:3000", "https://marklogistics.netlify.app"],
     credentials: true,
 }));
+
 
 const port = 8000;
 
@@ -130,61 +120,135 @@ app.get('/', (req, res) => {
     res.send("Hello");
 });
 
-app.get('/groups', (req, res) => {
-    groupModel.find()
+app.get('/rooms', (req, res) => {
+    roomModel.find()
         .then(data => res.json(data))
         .catch(err => res.json(err))
 })
 
-app.post('/AddGroup', async (req, res) => {
-    const { name, users, admin, org } = req.body;
+app.post('/AddRoom', async (req, res) => {
+    function makeid(length) {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const charactersLength = characters.length;
+        let counter = 0;
+        while (counter < length) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            counter += 1;
+        }
+        return result;
+    }
+
+    const { owner } = req.body;
+
+    // Generate the room code
+    const roomCode = makeid(9);
 
     const data = {
-        name: name,
-        users: users,
-        admin: admin,
-        org: org,
-
+        owner: owner,
+        roomCode: roomCode,
     };
 
     try {
-        await groupModel.create(data);
-        // console.log("Data inserted:", data);
-        return res.json("added");
+        const check = await roomModel.findOne({ owner: owner });
+        const check2 = await roomModel.findOne({ roomCode: roomCode });
+
+        if (check || check2) {
+            await roomModel.findOneAndDelete({ owner: owner });
+            await roomModel.create(data);
+            return res.json({ message: "added", roomCode: roomCode });
+        }
+
+        await roomModel.create(data);
+        console.log("Data inserted:", data);
+        return res.json({ message: "added", roomCode: roomCode });
 
     } catch (error) {
-        console.error("Error creating group:", error);
-        return res.status(500).json("nadded");
+        console.error("Error creating room:", error);
+        return res.status(500).json({ message: "nadded" });
     }
 });
+app.delete('/deleteRoom/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+      const deletedRoom = await roomModel.findOneAndDelete({ roomCode: id });
+      if (deletedRoom) {
+        res.status(200).json({ message: `Room with room code ${id} deleted successfully` });
+      } else {
+        res.status(404).json({ message: `Room with room code ${id} not found` });
+      }
+    } catch (err) {
+      console.error('Error deleting room:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
 
 
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+    // console.log(`A user connected: ${socket.id}`);
   
     // Handle the driver joining the room
-    socket.on('joinDriverRoom', (userId) => {
-    //   console.log(`Driver with ID ${userId} joined room driver_${userId}`);
-      socket.join(`driver_${userId}`);
+    socket.on('joinDriverRoom', (roomCode) => {
+      console.log(`Driver joined room: driver_${roomCode}`);
+      socket.join(`driver_${roomCode}`, (err) => {
+        if (err) {
+          console.error(`Error joining room driver_${roomCode}:`, err.message);
+        }
+      });
     });
   
     // Handle location updates from driver
     socket.on('locationUpdate', (data) => {
-      const { userId, lat, long, accuracy } = data;
-    //   console.log(`Location update for driver ${userId}:`, lat, long, accuracy);
-      io.to(`driver_${userId}`).emit('locationUpdate', { lat, long, accuracy });
+      const { userId, roomCode, lat, long, accuracy } = data;
+      console.log(`Location update for driver ${userId} in room driver_${roomCode}:`, lat, long, accuracy);
+      io.to(`driver_${roomCode}`).emit('locationUpdate', { lat, long, accuracy });
     });
   
     // Handle the student joining the room
-    socket.on('joinStudentRoom', (senderId) => {
-    //   console.log(`Student joined room driver_${senderId}`);
-      socket.join(`driver_${senderId}`);
+    socket.on('joinStudentRoom', (roomCode) => {
+      console.log(`Student joined room: driver_${roomCode}`);
+      socket.join(`driver_${roomCode}`, (err) => {
+        if (err) {
+          console.error(`Error joining room driver_${roomCode}:`, err.message);
+        }
+      });
     });
   
     socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
+      console.log(`User disconnected: ${socket.id}`);
     });
   });
+
+
+
+
+// io.on('connection', (socket) => {
+//     // console.log('A user connected:', socket.id);
+
+//     // Handle the driver joining the room
+//     socket.on('joinDriverRoom', (userId) => {
+//           console.log(`Driver with ID ${userId} joined room driver_${userId}`);
+//         socket.join(`driver_${userId}`);
+//     });
+
+//     // Handle location updates from driver
+//     socket.on('locationUpdate', (data) => {
+//         const { userId, lat, long, accuracy } = data;
+//         //   console.log(`Location update for driver ${userId}:`, lat, long, accuracy);
+//         io.to(`driver_${userId}`).emit('locationUpdate', { lat, long, accuracy });
+//     });
+
+//     // Handle the student joining the room
+//     socket.on('joinStudentRoom', (senderId) => {
+//           console.log(`Student joined room driver_${senderId}`);
+//         socket.join(`driver_${senderId}`);
+//     });
+
+//     socket.on('disconnect', () => {
+//         // console.log('User disconnected:', socket.id);
+//     });
+// });
 
 
 
@@ -212,7 +276,7 @@ io.on('connection', (socket) => {
 //     //     socket.join(userId);
 //     //     console.log(`User with ID ${userId} joined room ${userId}`);
 //     //   });
-    
+
 //     //   // Handle location updates
 //     //   socket.on('locationUpdate', (data) => {
 //     //     const { userId, lat, long, accuracy } = data;
@@ -226,19 +290,19 @@ io.on('connection', (socket) => {
 //         socket.join(`driver_${userId}`);
 //         console.log(`Driver with ID ${userId} joined room driver_${userId}`);
 //       });
-    
+
 //       // Handle location updates from driver
 //       socket.on('locationUpdate', (data) => {
 //         const { userId, lat, long, accuracy } = data;
 //         io.to(`driver_${userId}`).emit('locationUpdate', { lat, long, accuracy });
 //       });
-    
+
 //       // Join room for student to listen to location updates
 //       socket.on('joinStudentRoom', (senderId) => {
 //         socket.join(`student_${senderId}`);
 //         console.log(`Student joined room driver_${senderId}`);
 //       });
-    
+
 //       socket.on('disconnect', () => {
 //         console.log('User disconnected:', socket.id);
 //       });
