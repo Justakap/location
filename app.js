@@ -171,54 +171,54 @@ app.post('/AddRoom', async (req, res) => {
 app.delete('/deleteRoom/:id', async (req, res) => {
     const { id } = req.params;
     try {
-      const deletedRoom = await roomModel.findOneAndDelete({ roomCode: id });
-      if (deletedRoom) {
-        res.status(200).json({ message: `Room with room code ${id} deleted successfully` });
-      } else {
-        res.status(404).json({ message: `Room with room code ${id} not found` });
-      }
+        const deletedRoom = await roomModel.findOneAndDelete({ roomCode: id });
+        if (deletedRoom) {
+            res.status(200).json({ message: `Room with room code ${id} deleted successfully` });
+        } else {
+            res.status(404).json({ message: `Room with room code ${id} not found` });
+        }
     } catch (err) {
-      console.error('Error deleting room:', err);
-      res.status(500).json({ message: 'Internal server error' });
+        console.error('Error deleting room:', err);
+        res.status(500).json({ message: 'Internal server error' });
     }
-  });
-  
+});
+
 
 
 io.on('connection', (socket) => {
     // console.log(`A user connected: ${socket.id}`);
-  
+
     // Handle the driver joining the room
     socket.on('joinDriverRoom', (roomCode) => {
-      console.log(`Driver joined room: driver_${roomCode}`);
-      socket.join(`driver_${roomCode}`, (err) => {
-        if (err) {
-          console.error(`Error joining room driver_${roomCode}:`, err.message);
-        }
-      });
+        // console.log(`Driver joined room: driver_${roomCode}`);
+        socket.join(`driver_${roomCode}`, (err) => {
+            if (err) {
+                console.error(`Error joining room driver_${roomCode}:`, err.message);
+            }
+        });
     });
-  
+
     // Handle location updates from driver
     socket.on('locationUpdate', (data) => {
-      const { userId, roomCode, lat, long, accuracy } = data;
-      console.log(`Location update for driver ${userId} in room driver_${roomCode}:`, lat, long, accuracy);
-      io.to(`driver_${roomCode}`).emit('locationUpdate', { lat, long, accuracy });
+        const { userId, roomCode, lat, long, accuracy, speed, LastUpdated, altitude, altitudeAccuracy, heading } = data;
+        console.log(`Location update for driver ${userId} in room driver_${roomCode}:`, lat, long, accuracy, speed, heading, altitude, altitudeAccuracy);
+        io.to(`driver_${roomCode}`).emit('locationUpdate', { lat, long, accuracy, speed, LastUpdated, altitude, heading, altitudeAccuracy });
     });
-  
+
     // Handle the student joining the room
     socket.on('joinStudentRoom', (roomCode) => {
-      console.log(`Student joined room: driver_${roomCode}`);
-      socket.join(`driver_${roomCode}`, (err) => {
-        if (err) {
-          console.error(`Error joining room driver_${roomCode}:`, err.message);
-        }
-      });
+        console.log(`Student joined room: driver_${roomCode}`);
+        socket.join(`driver_${roomCode}`, (err) => {
+            if (err) {
+                console.error(`Error joining room driver_${roomCode}:`, err.message);
+            }
+        });
     });
-  
+
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.id}`);
+        console.log(`User disconnected: ${socket.id}`);
     });
-  });
+});
 
 
 
