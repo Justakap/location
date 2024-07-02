@@ -1,6 +1,4 @@
 // ./models/student.js
-
-const { type } = require('@testing-library/user-event/dist/type');
 const mongoose = require('mongoose');
 
 // Define the schema for the student
