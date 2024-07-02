@@ -392,7 +392,7 @@ app.post('/add-stop', async (req, res) => {
     const { name, org, lat, long, radius } = req.body;
 
     // Check for required fields
-    if (!name || !org || !lat || !long || !radius) {
+    if (!name || !org || !lat || !long) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 

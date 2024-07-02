@@ -24,7 +24,6 @@ const stopSchema = new mongoose.Schema({
     },
     radius: {
         type: String,
-        unique:true
     },
     
 
