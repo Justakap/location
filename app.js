@@ -151,6 +151,32 @@ app.post('/login', async (req, res) => {
         res.status(500).json("server error");
     }
 });
+app.post('/driver-login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await DriverModel.findOne({ email: email });
+
+        if (user) {
+            // Check if the password matches
+            if (user.password === password) {
+
+                // Respond with JSON data containing user's information
+                res.json({ auth: true, user: user });
+            } else {
+                // If the password doesn't match, respond with JSON indicating incorrect password
+                res.json("incorrect");
+            }
+        } else {
+            // If no user found with the provided email, respond with JSON indicating user does not exist
+            res.json("notexist");
+        }
+    } catch (error) {
+        // If an error occurs, respond with JSON indicating server error
+        console.error(error);
+        res.status(500).json("server error");
+    }
+});
 app.post('/signup', async (req, res) => {
     const { name, email, password, contact } = req.body
 
