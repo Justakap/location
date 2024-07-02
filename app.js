@@ -263,7 +263,7 @@ app.post('/signup', async (req, res) => {
     }
 
 })
-app.post('/signup', async (req, res) => {
+app.post('/org-signup', async (req, res) => {
     const { name, email, password, contact } = req.body
 
     const data = {
