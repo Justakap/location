@@ -31,7 +31,6 @@ const studentSchema = new mongoose.Schema({
     },
     vehicleNo: {
         type: String,
-        unique: true,
     },
     stop: {
         type: String
