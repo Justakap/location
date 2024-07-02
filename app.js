@@ -13,6 +13,7 @@ const studentModel = require("./models/student");
 const vehicleModel = require("./models/vehicle");
 const routeModel = require("./models/route");
 const stopModel = require("./models/stop");
+const orgModel = require("./models/org");
 
 
 
@@ -49,10 +50,11 @@ mongoose.connect("mongodb+srv://anantk15:root@cluster0.972saxu.mongodb.net/trans
         console.error("MongoDB connection error:", error);
     });
 
+
+// fetch-entity routes
 app.get('/', (req, res) => {
     res.send("Hello");
 });
-
 app.get('/userNew', async (req, res) => {
     try {
         const { _id } = req.query; // Extract email from query parameters
@@ -95,6 +97,11 @@ app.get('/stops', (req, res) => {
         .then(data => res.json(data))
         .catch(err => res.json(err))
 })
+app.get('/org', (req, res) => {
+    orgModel.find()
+        .then(data => res.json(data))
+        .catch(err => res.json(err))
+})
 app.get('/driver', (req, res) => {
     DriverModel.find()
         .then(data => res.json(data))
@@ -103,7 +110,7 @@ app.get('/driver', (req, res) => {
 
 
 
-
+// delete-entity routes
 app.delete('/deleteRoom/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -123,7 +130,7 @@ app.delete('/deleteRoom/:id', async (req, res) => {
 
 
 
-// login and signup routes 
+// login routes 
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
@@ -177,6 +184,60 @@ app.post('/driver-login', async (req, res) => {
         res.status(500).json("server error");
     }
 });
+app.post('/student-login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await studentModel.findOne({ email: email });
+
+        if (user) {
+            // Check if the password matches
+            if (user.password === password) {
+
+                // Respond with JSON data containing user's information
+                res.json({ auth: true, user: user });
+            } else {
+                // If the password doesn't match, respond with JSON indicating incorrect password
+                res.json("incorrect");
+            }
+        } else {
+            // If no user found with the provided email, respond with JSON indicating user does not exist
+            res.json("notexist");
+        }
+    } catch (error) {
+        // If an error occurs, respond with JSON indicating server error
+        console.error(error);
+        res.status(500).json("server error");
+    }
+});
+app.post('/org-login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await orgModel.findOne({ email: email });
+
+        if (user) {
+            // Check if the password matches
+            if (user.password === password) {
+
+                // Respond with JSON data containing user's information
+                res.json({ auth: true, user: user });
+            } else {
+                // If the password doesn't match, respond with JSON indicating incorrect password
+                res.json("incorrect");
+            }
+        } else {
+            // If no user found with the provided email, respond with JSON indicating user does not exist
+            res.json("notexist");
+        }
+    } catch (error) {
+        // If an error occurs, respond with JSON indicating server error
+        console.error(error);
+        res.status(500).json("server error");
+    }
+});
+
+
+// signup routes 
 app.post('/signup', async (req, res) => {
     const { name, email, password, contact } = req.body
 
@@ -202,8 +263,33 @@ app.post('/signup', async (req, res) => {
     }
 
 })
+app.post('/signup', async (req, res) => {
+    const { name, email, password, contact } = req.body
 
-// add-driver route
+    const data = {
+        email: email,
+        password: password,
+        name: name,
+        contact: contact,
+
+    }
+
+    try {
+        const check = await orgModel.findOne({ email: email })
+        if (check) {
+            res.json("exist")
+        } else {
+            res.json("notexist")
+            await orgModel.insertMany([data])
+        }
+    } catch (error) {
+        console.log(error);
+        res.json("invalid")
+    }
+
+})
+
+// add-entity routes
 app.post('/add-driver', async (req, res) => {
     const {email, name, password, org ,contact} = req.body;
 
@@ -228,7 +314,6 @@ app.post('/add-driver', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 app.post('/add-student', async (req, res) => {
     const { email, password, name, contact, emergencyContact, org, vehicleNo, stop } = req.body;
 
@@ -258,7 +343,6 @@ app.post('/add-student', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 app.post('/add-vehicle', async (req, res) => {
     const { vehicleNo, name, org } = req.body;
 
@@ -281,7 +365,6 @@ app.post('/add-vehicle', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 app.post('/add-route', async (req, res) => {
     const { name, org, stop, vehicleNo } = req.body;
 
@@ -305,7 +388,6 @@ app.post('/add-route', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 app.post('/add-stop', async (req, res) => {
     const { name, org, lat, long, radius } = req.body;
 
@@ -330,7 +412,6 @@ app.post('/add-stop', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 app.post('/AddRoom', async (req, res) => {
     function makeid(length) {
         let result = '';
@@ -382,7 +463,7 @@ app.post('/AddRoom', async (req, res) => {
 
 
 
-
+//socket connection 
 io.on('connection', (socket) => {
     // console.log(`A user connected: ${socket.id}`);
 
