@@ -4,35 +4,34 @@ const mongoose = require('mongoose');
 
 // Define the schema for the driver
 const driverSchema = new mongoose.Schema({
-    email:{
-        type:String,
+    email: {
+        type: String,
         required: true,
-        unique:true
+        unique: true
     },
-    password:{
-        type:String,
-        required: true,
-    },
-    name:{
-        type:String,
+    password: {
+        type: String,
         required: true,
     },
-    contact:{
-        type:String,
+    name: {
+        type: String,
         required: true,
     },
-    org:{
-        type:String,
+    contact: {
+        type: String,
         required: true,
     },
-    vehicleNo:{
-        type:String,
-        unique: true,
+    org: {
+        type: String,
+        required: true,
     },
-    stop:{
-        type : String
+    vehicleNo: {
+        type: String,
+    },
+    stop: {
+        type: String
     }
-    
+
 });
 
 // Create and export the DriverModel
