@@ -405,6 +405,29 @@ app.post('/add-route', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+app.put('/update-driver/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+  
+      // Remove empty fields from the updates object
+      Object.keys(updates).forEach(key => {
+        if (updates[key] === '') {
+          delete updates[key];
+        }
+      });
+  
+      const updatedDriver = await DriverModel.findByIdAndUpdate(id, updates, { new: true });
+  
+      if (!updatedDriver) {
+        return res.status(404).send({ error: 'Driver not found' });
+      }
+  
+       res.status(201).json({ message: 'Driver updated successfully' });
+    } catch (error) {
+      res.status(500).send({ error: 'Error updating driver' });
+    }
+  });
 app.post('/add-stop', async (req, res) => {
     const { name, org, lat, long, radius } = req.body;
 
