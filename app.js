@@ -72,6 +72,23 @@ app.get('/userNew', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 })
+app.get('/orgNew', async (req, res) => {
+    try {
+        const { _id } = req.query; // Extract email from query parameters
+
+        // Find the user by email
+        const user = await orgModel.findOne({ _id: _id });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json(user); // Send user data as response
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+})
 app.get('/rooms', (req, res) => {
     roomModel.find()
         .then(data => res.json(data))

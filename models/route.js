@@ -4,8 +4,6 @@ const mongoose = require('mongoose');
 
 // Define the schema for the route
 const routeSchema = new mongoose.Schema({
-
-
     name: {
         type: String,
         required: true,
@@ -14,18 +12,15 @@ const routeSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    stop: {
+    stop: [{
         id: String,
         name: String,
-        sequence:Number
-    },
+        sequence: Number
+    }],
     vehicleNo: {
         type: String,
         unique: true
-    },
-  
-
-
+    }
 });
 
 // Create and export the routeModel
