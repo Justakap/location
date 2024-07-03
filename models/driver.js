@@ -32,7 +32,6 @@ const driverSchema = new mongoose.Schema({
     },
     routeId: {
         type: String,
-        unique: true
     }
 
 });

@@ -308,7 +308,7 @@ app.post('/org-signup', async (req, res) => {
 
 // add-entity routes
 app.post('/add-driver', async (req, res) => {
-    const {email, name, password, org ,contact} = req.body;
+    const {email, name, password, org ,contact,stop} = req.body;
 
     if (!name || !password || !email || !org|| !contact) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -320,6 +320,7 @@ app.post('/add-driver', async (req, res) => {
         name: name,
         org: org,
         contact:contact,
+        stop:stop
 
     };
 
