@@ -1,5 +1,4 @@
 // ./models/driver.js
-
 const mongoose = require('mongoose');
 
 // Define the schema for the driver
@@ -30,6 +29,10 @@ const driverSchema = new mongoose.Schema({
     },
     stop: {
         type: String
+    },
+    routeId: {
+        type: String,
+        unique: true
     }
 
 });

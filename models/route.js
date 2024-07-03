@@ -16,11 +16,7 @@ const routeSchema = new mongoose.Schema({
         id: String,
         name: String,
         sequence: Number
-    }],
-    vehicleNo: {
-        type: String,
-        unique: true
-    }
+    }]
 });
 
 // Create and export the routeModel
