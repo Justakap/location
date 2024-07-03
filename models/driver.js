@@ -27,10 +27,16 @@ const driverSchema = new mongoose.Schema({
     vehicleNo: {
         type: String,
     },
+    vehicleName: {
+        type: String,
+    },
     stop: {
         type: String
     },
     routeId: {
+        type: String,
+    },
+    routeName: {
         type: String,
     }
 
