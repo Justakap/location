@@ -81,6 +81,7 @@ app.get('/orgNew', async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
+            console.log("hi")
         }
 
         res.status(200).json(user); // Send user data as response
