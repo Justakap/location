@@ -468,7 +468,7 @@ app.post('/add-trip', async (req, res) => {
         return result;
     }
 
-    const { owner, org } = req.body;
+    const { owner, org ,vehicleId} = req.body;
 
     // Generate the room code
     const tripCode = makeid(9);
@@ -476,7 +476,8 @@ app.post('/add-trip', async (req, res) => {
     const data = {
         owner: owner,
         tripCode: tripCode,
-        org: org
+        org: org,
+        vehicleId:vehicleId
     };
     try {
         const check = await tripModel.findOne({ owner: owner });
@@ -489,7 +490,8 @@ app.post('/add-trip', async (req, res) => {
             const data = {
                 owner: owner,
                 tripCode: tripCode,
-                org: org
+                org: org,
+                vehicleId:vehicleId
             };
             await tripModel.create(data);
             return res.json({ message: "added", tripCode: tripCode });
@@ -656,7 +658,7 @@ io.on('connection', (socket) => {
     socket.on('org-locationEnded', (data) => {
         const { userId, tripCode,  } = data;
         console.log(`Location Ended for driver ${userId} in room driver_${tripCode}:`);
-        io.to(`driver_${tripCode}`).emit('org-locationUpdate', {tripCode });
+        io.to(`driver_${tripCode}`).emit('org-locationEnded', {userId,tripCode });
     });
 
     // Handle the student joining the room
