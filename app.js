@@ -168,7 +168,7 @@ app.get('/driver', (req, res) => {
         .catch(err => res.json(err))
 })
 
-
+console.log("h")
 
 // delete-entity routes
 app.delete('/deleteRoom/:id', async (req, res) => {
