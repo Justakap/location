@@ -14,6 +14,7 @@ const vehicleModel = require("./models/vehicle");
 const routeModel = require("./models/route");
 const stopModel = require("./models/stop");
 const orgModel = require("./models/org");
+const tripModel = require("./models/trip");
 
 
 
@@ -90,8 +91,31 @@ app.get('/orgNew', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 })
+app.get('/driverNew', async (req, res) => {
+    try {
+        const { _id } = req.query; // Extract email from query parameters
+
+        // Find the user by email
+        const user = await DriverModel.findOne({ _id: _id });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+            console.log("hi")
+        }
+
+        res.status(200).json(user); // Send user data as response
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+})
 app.get('/rooms', (req, res) => {
     roomModel.find()
+        .then(data => res.json(data))
+        .catch(err => res.json(err))
+})
+app.get('/trips', (req, res) => {
+    tripModel.find()
         .then(data => res.json(data))
         .catch(err => res.json(err))
 })
@@ -309,19 +333,19 @@ app.post('/org-signup', async (req, res) => {
 
 // add-entity routes
 app.post('/add-driver', async (req, res) => {
-    const {email, name, password, org ,contact,stop} = req.body;
+    const { email, name, password, org, contact, stop } = req.body;
 
-    if (!name || !password || !email || !org|| !contact) {
+    if (!name || !password || !email || !org || !contact) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const data = {
-        email:email,
+        email: email,
         password: password,
         name: name,
         org: org,
-        contact:contact,
-        stop:stop
+        contact: contact,
+        stop: stop
 
     };
 
@@ -407,29 +431,6 @@ app.post('/add-route', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-app.put('/update-driver/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-  
-      // Remove empty fields from the updates object
-      Object.keys(updates).forEach(key => {
-        if (updates[key] === '') {
-          delete updates[key];
-        }
-      });
-  
-      const updatedDriver = await DriverModel.findByIdAndUpdate(id, updates, { new: true });
-  
-      if (!updatedDriver) {
-        return res.status(404).send({ error: 'Driver not found' });
-      }
-  
-       res.status(201).json({ message: 'Driver updated successfully' });
-    } catch (error) {
-      res.status(500).send({ error: 'Error updating driver' });
-    }
-  });
 app.post('/add-stop', async (req, res) => {
     const { name, org, lat, long, radius } = req.body;
 
@@ -452,6 +453,55 @@ app.post('/add-stop', async (req, res) => {
     } catch (error) {
         console.error('Error adding stop:', error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+app.post('/add-trip', async (req, res) => {
+    function makeid(length) {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const charactersLength = characters.length;
+        let counter = 0;
+        while (counter < length) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            counter += 1;
+        }
+        return result;
+    }
+
+    const { owner, org } = req.body;
+
+    // Generate the room code
+    const tripCode = makeid(9);
+
+    const data = {
+        owner: owner,
+        tripCode: tripCode,
+        org: org
+    };
+    try {
+        const check = await tripModel.findOne({ owner: owner });
+        const check2 = await tripModel.findOne({ tripCode: tripCode });
+
+        if (check || check2) {
+            // await tripModel.findOneAndDelete({ owner: owner });
+            const tripCode = makeid(9);
+
+            const data = {
+                owner: owner,
+                tripCode: tripCode,
+                org: org
+            };
+            await tripModel.create(data);
+            return res.json({ message: "added", tripCode: tripCode });
+        }
+
+        await tripModel.create(data);
+        // console.log("Data inserted:", data);
+        return res.json({ message: "added", tripCode: tripCode });
+
+    } catch (error) {
+        console.error("Error creating room:", error);
+        return res.status(500).json({ message: "nadded" });
     }
 });
 app.post('/AddRoom', async (req, res) => {
@@ -499,6 +549,59 @@ app.post('/AddRoom', async (req, res) => {
 
 
 
+
+// Update
+app.put('/update-driver/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+  
+      // Remove empty fields from the updates object
+      Object.keys(updates).forEach(key => {
+        if (updates[key] === '') {
+          delete updates[key];
+        }
+      });
+  
+      const updatedDriver = await DriverModel.findByIdAndUpdate(id, updates, { new: true });
+  
+      if (!updatedDriver) {
+        return res.status(404).send({ error: 'Driver not found' });
+      }
+  
+       res.status(201).json({ message: 'Driver updated successfully' });
+    } catch (error) {
+      res.status(500).send({ error: 'Error updating driver' });
+    }
+  });
+
+app.put('/update-trip/:tripCode', async (req, res) => {
+    try {
+        const { tripCode } = req.params;
+        const updates = req.body;
+
+        // Remove empty fields from the updates object
+        Object.keys(updates).forEach(key => {
+            if (updates[key] === '') {
+                delete updates[key];
+            }
+        });
+
+        const updateTrip = await tripModel.findOneAndUpdate({ tripCode: tripCode }, updates, { new: true });
+
+        if (!updateTrip) {
+            return res.status(404).send({ error: 'Trip not found' });
+        }
+
+        res.status(201).json({ message: 'Trip updated successfully' });
+    } catch (error) {
+        res.status(500).send({ error: 'Error updating Trip' });
+    }
+});
+
+
+
+
 app.post('/driver-login-update', async (req, res) => {
     const { email, password } = req.body;
 
@@ -535,6 +638,44 @@ io.on('connection', (socket) => {
     // console.log(`A user connected: ${socket.id}`);
 
     // Handle the driver joining the room
+    socket.on('org-joinDriverRoom', (tripCode) => {
+        // console.log(`Driver joined room: driver_${tripCode}`);
+        socket.join(`driver_${tripCode}`, (err) => {
+            if (err) {
+                console.error(`Error joining room driver_${tripCode}:`, err.message);
+            }
+        });
+    });
+
+    // Handle location updates from driver
+    socket.on('org-locationUpdate', (data) => {
+        const { userId, tripCode, lat, long, accuracy, speed, LastUpdated, altitude, altitudeAccuracy, heading } = data;
+        console.log(`Location update for driver ${userId} in room driver_${tripCode}:`, lat, long, accuracy, speed, heading, altitude, altitudeAccuracy);
+        io.to(`driver_${tripCode}`).emit('org-locationUpdate', { lat, long, accuracy, speed, LastUpdated, altitude, heading, altitudeAccuracy });
+    });
+    socket.on('org-locationEnded', (data) => {
+        const { userId, tripCode,  } = data;
+        console.log(`Location Ended for driver ${userId} in room driver_${tripCode}:`);
+        io.to(`driver_${tripCode}`).emit('org-locationUpdate', {tripCode });
+    });
+
+    // Handle the student joining the room
+    socket.on('org-joinStudentRoom', (tripCode) => {
+        console.log(`Student joined room: driver_${tripCode}`);
+        socket.join(`driver_${tripCode}`, (err) => {
+            if (err) {
+                console.error(`Error joining room driver_${tripCode}:`, err.message);
+            }
+        });
+    });
+
+    socket.on('org-disconnect', () => {
+        // console.log(`User disconnected: ${socket.id}`);
+    });
+
+
+
+    // for just location sharing 
     socket.on('joinDriverRoom', (roomCode) => {
         // console.log(`Driver joined room: driver_${roomCode}`);
         socket.join(`driver_${roomCode}`, (err) => {
