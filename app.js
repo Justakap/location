@@ -594,7 +594,6 @@ app.put('/update-driver/:id', async (req, res) => {
       res.status(500).send({ error: 'Error updating driver' });
     }
   });
-
 app.put('/update-trip/:tripCode', async (req, res) => {
     try {
         const { tripCode } = req.params;
@@ -616,6 +615,28 @@ app.put('/update-trip/:tripCode', async (req, res) => {
         res.status(201).json({ message: 'Trip updated successfully' });
     } catch (error) {
         res.status(500).send({ error: 'Error updating Trip' });
+    }
+});
+app.put('/update-stop/:stopId', async (req, res) => {
+    try {
+        const { stopId } = req.params;
+        const { reached } = req.body;
+
+        const route = await routeModel.findOne({ "stop.id": stopId });
+        if (route) {
+            const stop = route.stop.find(stop => stop.id === stopId);
+            if (stop) {
+                stop.reached = true;
+                await route.save();
+                res.status(200).send('Stop reached status updated');
+            } else {
+                res.status(404).send('Stop not found');
+            }
+        } else {
+            res.status(404).send('Route not found');
+        }
+    } catch (err) {
+        res.status(500).send('Server error');
     }
 });
 
@@ -665,6 +686,8 @@ io.on('connection', (socket) => {
                 console.error(`Error joining room driver_${tripCode}:`, err.message);
             }
         });
+        io.to(`driver_${tripCode}`).emit('org-joinDriverRoom', { tripCode});
+
     });
 
     // Handle location updates from driver
@@ -687,11 +710,15 @@ io.on('connection', (socket) => {
                 console.error(`Error joining room driver_${tripCode}:`, err.message);
             }
         });
+        io.to(`driver_${tripCode}`).emit('org-joinStudentRoom', { tripCode});
+
     });
 
     socket.on('org-disconnect', () => {
         // console.log(`User disconnected: ${socket.id}`);
     });
+    console.log("hi")
+    console.log("hi")
 
 
 
