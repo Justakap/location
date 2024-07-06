@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose');
 
+// Define the schema for the route
 const routeSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -15,15 +16,12 @@ const routeSchema = new mongoose.Schema({
         id: String,
         name: String,
         sequence: Number,
-        longitude: Number,
-        latitude: Number,
-        reached: {
-            type: Boolean,
-            default: false
-        }
+        lat:Number,
+        long:Number
     }],
-
+    
 });
+
 // Create and export the routeModel
 const routeModel = mongoose.model('route', routeSchema);
 

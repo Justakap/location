@@ -30,7 +30,21 @@ const tripSchema = new mongoose.Schema({
     {
         type: Boolean,
         default: true
-    }
+    },
+    routeId: {
+        type: String,
+    },
+    stop: [{
+        id: String,
+        name: String,
+        sequence: Number,
+        lat: Number,
+        long: Number,
+        reached: {
+            type: Boolean,
+            default: false
+        }
+    }],
 
 });
 
