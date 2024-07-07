@@ -36,7 +36,8 @@ const io = new Server(server, {
 
 // Apply CORS middleware
 app.use(cors({
-    origin: ["http://localhost:3000", "https://marklogistics.netlify.app", "*", "192.168.1.5:3000", "192.168.1.8:3000"],
+    origin: ["*"],
+    // origin: ["http://localhost:3000", "https://marklogistics.netlify.app", "*", "192.168.1.5:3000", "192.168.1.8:3000"],
     credentials: true,
 }));
 
