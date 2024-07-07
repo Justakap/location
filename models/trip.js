@@ -46,8 +46,7 @@ const tripSchema = new mongoose.Schema({
         },
         arrivalTime:{
             type: Date,
-            default: Date.now()
-        }
+         }
 
     }],
 

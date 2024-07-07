@@ -175,7 +175,6 @@ app.get('/driver', (req, res) => {
         .catch(err => res.json(err))
 })
 
-console.log("h")
 
 // delete-entity routes
 app.delete('/deleteRoom/:id', async (req, res) => {
@@ -651,7 +650,7 @@ app.put('/update-trip/:tripCode', async (req, res) => {
 
 app.put('/update-stop/:tripId/:stopId', async (req, res) => {
     const { tripId, stopId } = req.params;
-    const { reached } = req.body;
+    const { reached, arrivalTime } = req.body;
 
     try {
         const trip = await tripModel.findById(tripId);
@@ -667,6 +666,9 @@ app.put('/update-stop/:tripId/:stopId', async (req, res) => {
         }
 
         stop.reached = reached;
+        if (!stop.arrivalTime) {
+            stop.arrivalTime = arrivalTime;
+        }
 
         await trip.save();
 
