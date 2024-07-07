@@ -43,7 +43,12 @@ const tripSchema = new mongoose.Schema({
         reached: {
             type: Boolean,
             default: false
+        },
+        arrivalTime:{
+            type: Date,
+            default: Date.now()
         }
+
     }],
 
 });

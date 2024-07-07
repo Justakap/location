@@ -36,7 +36,7 @@ const io = new Server(server, {
 
 // Apply CORS middleware
 app.use(cors({
-    origin: ["http://localhost:3000", "https://marklogistics.netlify.app"],
+    origin: ["http://localhost:3000", "https://marklogistics.netlify.app", "*", "192.168.1.5:3000", "192.168.1.8:3000"],
     credentials: true,
 }));
 
@@ -730,7 +730,7 @@ io.on('connection', (socket) => {
         console.log(`Location Ended for driver ${userId} in room driver_${tripCode}:`);
         io.to(`driver_${tripCode}`).emit('org-locationEnded', { userId, tripCode });
     });
-   
+
 
     // Handle the student joining the room
     socket.on('org-joinStudentRoom', (tripCode) => {
