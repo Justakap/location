@@ -708,6 +708,19 @@ app.post('/driver-login-update', async (req, res) => {
     }
 });
 
+app.put('/update-routes/:id', async (req, res) => {
+    const { id } = req.params;
+    const { stop } = req.body;
+  
+    try {
+      const updatedRoute = await routeModel .findByIdAndUpdate(id, { stop }, { new: true });
+      res.json(updatedRoute);
+    } catch (err) {
+      console.error('Error updating route:', err);
+      res.status(500).json({ message: 'Error updating route' });
+    }
+  });
+
 
 
 
