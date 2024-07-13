@@ -770,6 +770,11 @@ io.on('connection', (socket) => {
         console.log(`Driver Rec the student `, data);
     });
 
+    socket.on('stopupdate', (data) => {
+        console.log('Received stop update:', data);
+        io.emit('stopupdate', data); 
+    });
+
     socket.on('org-disconnect', () => {
         // console.log(`User disconnected: ${socket.id}`);
     });
