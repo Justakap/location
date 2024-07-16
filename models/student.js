@@ -34,6 +34,9 @@ const studentSchema = new mongoose.Schema({
     },
     stop: {
         type: String
+    },
+    fcmToken: {
+        type: String
     }
 
 });
