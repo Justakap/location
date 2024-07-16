@@ -16,6 +16,13 @@ const stopModel = require("./models/stop");
 const orgModel = require("./models/org");
 const tripModel = require("./models/trip");
 
+const admin = require("firebase-admin");
+const serviceAccount = require("./marklogistics-84539-firebase-adminsdk-6rlxa-01cbfac3a7.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 
 
 
@@ -48,7 +55,7 @@ app.use(cors({
 }));
 
 
-const port = 8000;
+const port = 8001;
 
 mongoose.connect("mongodb+srv://anantk15:root@cluster0.972saxu.mongodb.net/transportation?retryWrites=true&w=majority")
     .then(() => {
@@ -813,6 +820,91 @@ io.on('connection', (socket) => {
         console.log(`User disconnected: ${socket.id}`);
     });
 });
+
+
+app.post("/subscribe", async (req, res) => {
+    const { fcm_Device_token, topicName } = req.body;
+  
+    if (!fcm_Device_token || !topicName) {
+      return res
+        .status(400)
+        .json({ message: "Device token and topic name are required" });
+    }
+  
+    try {
+      const response = await admin
+        .messaging()
+        .subscribeToTopic([fcm_Device_token], topicName);
+      console.log("Successfully subscribed to topic:", response);
+      res.status(200).json({ message: "Successfully Subscribed !!", response });
+    } catch (err) {
+      console.error("Error subscribing to topic:", err);
+      res
+        .status(500)
+        .json({ message: "Failed to subscribe to topic", error: err });
+    }
+  });
+  
+  app.post("/sendNotification", async (req, res) => {
+    const { topicName, title, body, image } = req.body;
+  
+    if (!topicName || !title || !body) {
+      return res
+        .status(400)
+        .json({ message: "Topic name, title, and body are required" });
+    }
+  
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+        imageUrl: image,
+      },
+      topic: topicName,
+    };
+  
+    try {
+      const response = await admin.messaging().send(message);
+      console.log("Successfully sent message:", response);
+      res
+        .status(200)
+        .json({ message: "Notification sent successfully!", response });
+    } catch (err) {
+      console.error("Error sending message:", err);
+      res
+        .status(500)
+        .json({ message: "Failed to send notification", error: err });
+    }
+  });
+  
+  app.put("/update-fcm-token/:id", async (req, res) => {
+    try {
+      const studentId = req.params.id;
+      const { fcmToken } = req.body;
+  
+      const existingStudent = await studentModel.findById(studentId);
+  
+      if (!existingStudent) {
+        return res.status(404).send("Student not found");
+      }
+  
+      // Check if the current fcmToken is already the same as the new one
+      if (existingStudent.fcmToken === fcmToken) {
+        return res.status(200).json(existingStudent); // Return current student data
+      }
+  
+      // Update the fcmToken
+      existingStudent.fcmToken = fcmToken;
+      const updatedStudent = await existingStudent.save();
+  
+      res.json(updatedStudent);
+    } catch (error) {
+      console.error("Error updating fcmToken:", error);
+      res.status(500).send("Server error");
+    }
+  });
+
+  
 
 server.listen(port, () => {
     console.log(`Server started at port ${port}`);
